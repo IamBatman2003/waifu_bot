@@ -24,7 +24,7 @@ client_2 = TelegramClient('user2_session', api_id_2, api_hash_2)
 spam_active = False
 stop_event = asyncio.Event()
 
-# === Message Sets ===
+# === Original Message Sets ===
 user1_messages = [
     "Hey! How’s everything going?", "Good vibes only", "Anyone here today?",
     "I'm just chilling", "Hope your day’s going great", "Peace and love fam!",
@@ -37,101 +37,98 @@ user2_messages = [
     "Anyone up for a duel?", "Who's still awake?", "Always grinding", "Let's gooo!"
 ]
 
-# === Function to Send Messages ===
-async def send_limited_messages(client, name, delay, messages, max_messages, stop_event):
+# === Continuous Message Sending Function ===
+async def send_continuous_messages(client, name, base_delay, messages, stop_event):
     try:
         group = await client.get_entity(group_link)
+        print(f"[✅] {name} connected to group")
     except Exception as e:
-        print(f"[❌] {name} failed to join group: {e}")
+        print(f"[❌] {name} group connection failed: {e}")
         return
 
-    for i in range(max_messages):
-        if stop_event.is_set():
-            print(f"[🛑] {name} stopped early.")
-            break
+    while not stop_event.is_set():
         try:
             message = random.choice(messages)
-            await client.send_read_acknowledge(group)
             await client.send_message(group, message)
-            print(f"[✅] {name} sent: {message}")
-            await asyncio.sleep(delay + random.uniform(0.3, 0.8))
+            print(f"[📩] {name} sent: {message}")
+            
+            # Random delay with jitter
+            delay = base_delay + random.uniform(0.5, 1.2)
+            await asyncio.sleep(delay)
+            
         except Exception as e:
-            print(f"[⚠️] {name} error: {e}")
-            break
+            print(f"[⚠️] {name} temporary error: {e}")
+            await asyncio.sleep(5)  # Wait before retrying
 
-# === Start Handler (Shared) ===
-async def start_handler(event, sender_name):
+# === Improved Command Handlers ===
+async def start_handler(event):
     global spam_active
     sender = await event.get_sender()
-
+    
     if sender.id not in allowed_user_ids:
-        print(f"[🚫] Unauthorized user: {sender.id}")
-        await event.respond("❌ You are not allowed to use this bot.")
+        await event.respond("🚫 Unauthorized access!")
         return
-
+    
     if spam_active:
-        await event.respond("⚠️ Already running.")
+        await event.respond("⚠️ Already spamming!")
         return
-
-    print(f"[🚀] Spamming started by {sender_name}.")
-    await event.respond("✅ Spamming started.")
+    
     spam_active = True
     stop_event.clear()
-
+    
     # Start both spamming tasks
-    asyncio.create_task(send_limited_messages(client_1, "User 1", 1.6, user1_messages, 50, stop_event))
-    asyncio.create_task(send_limited_messages(client_2, "User 2", 1.8, user2_messages, 50, stop_event))
+    asyncio.create_task(send_continuous_messages(client_1, "User1", 1.6, user1_messages, stop_event))
+    asyncio.create_task(send_continuous_messages(client_2, "User2", 1.8, user2_messages, stop_event))
+    
+    await event.respond("🚀 Spamming STARTED!\n\n▶️ Messages will send continuously\n⏹ Use /stop to end")
 
-# === Stop Handler (Shared) ===
-async def stop_handler(event, sender_name):
+async def stop_handler(event):
     global spam_active
     sender = await event.get_sender()
-
+    
     if sender.id not in allowed_user_ids:
-        print(f"[🚫] Unauthorized user tried to stop: {sender.id}")
-        await event.respond("❌ You are not allowed to stop this bot.")
+        await event.respond("🚫 Unauthorized access!")
         return
-
+    
     if not spam_active:
-        await event.respond("⚠️ Bot is not running.")
+        await event.respond("⚠️ Not currently active!")
         return
-
-    print(f"[🛑] Spamming stopped by {sender_name}.")
-    await event.respond("🛑 Bot stopped.")
+    
     spam_active = False
     stop_event.set()
+    await event.respond("🛑 Spamming STOPPED!")
 
-# === Bind Handlers to both clients ===
-@client_1.on(events.NewMessage(pattern='/start'))
-async def handle_start_1(event):
-    await start_handler(event, "User 1")
+# === Event Registration ===
+for client in [client_1, client_2]:
+    @client.on(events.NewMessage(pattern='/start'))
+    async def handle_start(event):
+        await start_handler(event)
 
-@client_2.on(events.NewMessage(pattern='/start'))
-async def handle_start_2(event):
-    await start_handler(event, "User 2")
-
-@client_1.on(events.NewMessage(pattern='/stop'))
-async def handle_stop_1(event):
-    await stop_handler(event, "User 1")
-
-@client_2.on(events.NewMessage(pattern='/stop'))
-async def handle_stop_2(event):
-    await stop_handler(event, "User 2")
+    @client.on(events.NewMessage(pattern='/stop'))
+    async def handle_stop(event):
+        await stop_handler(event)
 
 # === Main Function ===
 async def main():
     await client_1.start()
     await client_2.start()
-
-    if not await client_1.is_user_authorized() or not await client_2.is_user_authorized():
-        print("[❌] Please authorize sessions with login_sessions.py")
-        return
-
-    print("[✅] Bot is ready. Waiting for /start or /stop commands...")
+    
+    print("\n" + "="*40)
+    print("🔰 SPAM BOT ACTIVE 🔰")
+    print(f"👥 Monitoring {group_link}")
+    print("⚡ Commands: /start | /stop")
+    print("="*40 + "\n")
+    
     await asyncio.gather(
         client_1.run_until_disconnected(),
         client_2.run_until_disconnected()
     )
 
-# === Run Main ===
-asyncio.run(main())
+# === Run the Bot ===
+if __name__ == '__main__':
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n[🛑] Bot shutdown requested")
+    finally:
+        print("[🔴] Service terminated")
