@@ -78,7 +78,7 @@ async def start_handler(event):
     
     # Start both spamming tasks
     asyncio.create_task(send_continuous_messages(client_1, "User1", 1.6, user1_messages, stop_event))
-    asyncio.create_task(send_continuous_messages(client_2, "User2", 1.8, user2_messages, stop_event))
+    asyncio.create_task(send_continuous_messages(client_2, "User2", 1.7, user2_messages, stop_event))
     
     await event.respond("🚀 Spamming STARTED!\n\n▶️ Messages will send continuously\n⏹ Use /stop to end")
 
