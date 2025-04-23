@@ -11,7 +11,7 @@ api_id_2 = 20700287
 api_hash_2 = 'b891a147402520ddec8934adea2f10f9'
 
 # === GROUP LINK ===
-group_link = 'https://t.me/+Xtr_KT98qWA0Yzg1'
+group_link = 'https://t.me/+7_bRIW46wjNjNjll'
 
 # === ALLOWED USER IDs ===
 allowed_user_ids = [1745055042, 7280186793]
