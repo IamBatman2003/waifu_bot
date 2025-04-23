@@ -24,49 +24,21 @@ client_2 = TelegramClient('user2_session', api_id_2, api_hash_2)
 spam_active = False
 stop_event = asyncio.Event()
 
-# === USER 1 MESSAGES ===
+# === USER 1 MESSAGES (Weighted) ===
 user1_messages = [
+    *["/XXXXXXXXXXXXXXXXXXXXX"] * 10,
     "Hey! How’s everything going?", "Good vibes only 🌈", "Anyone here today?",
     "I'm just chilling 🍃", "Hope your day’s going great!", "Peace and love fam! ✌️",
-    "Wassup crew?", "Haha that was funny 😂", "Where’s everyone at?", "Stay blessed ✨",
-
-    # Tamil
-    "எப்படி இருக்கீங்க நண்பர்களே?",  # How are you, friends?
-    "சும்மா ஓய்வாக இருக்கேன்!",      # Just relaxing
-    "இன்றைக்கு சூப்பரா இருக்கு!",    # Today is super!
-
-    # Hindi
-    "क्या हाल है दोस्तों?",         # How are you guys?
-    "सब मस्त चल रहा है 🔥",         # Everything’s awesome
-    "आराम से बैठा हूँ यार 😎",       # Just chilling, bro
-
-    # Japanese
-    "こんにちは皆さん！",             # Hello everyone!
-    "今日も頑張ろう！💪",             # Let's do our best today!
-    "ゆっくりしてる〜",               # I'm relaxing
+    "Wassup crew?", "Haha that was funny 😂", "Where’s everyone at?", "Stay blessed ✨"
 ]
 
-# === USER 2 MESSAGES ===
+# === USER 2 MESSAGES (Weighted) ===
 user2_messages = [
+    *["/XXXXXXXXXXXXXXXXXXXXX"] * 10,
     "Yo! Ready to roll?", "Let’s get it started 🎯", "I’m back in action!",
     "Boom! Just like that 💥", "What’s up pirates? 🏴‍☠️", "Target locked!",
     "Anyone up for a duel? ⚔️", "Who's still awake? 🕒", "Always grinding 💪", "Let's gooo!",
-    "Uoombu 😂",
-
-    # Tamil
-    "வா மச்சான், விளையாடலாம்!",  # Come bro, let’s play!
-    "இந்த குழு சூப்பர் தான் 😍",  # This group is awesome!
-    "போடா செம ஆட்டம் 💯",        # That was epic!
-
-    # Hindi
-    "आज तो धमाका करेंगे 🔥",      # Today we'll explode (figuratively)
-    "चलो कुछ मजेदार करते हैं 😎",  # Let’s do something fun
-    "भाई, तू कमाल है!",           # Bro, you're amazing!
-
-    # Japanese
-    "よし、いこうぜ！",             # Alright, let's go!
-    "すごいね、このグループ！",      # This group is awesome!
-    "やったー！たのしい！🎉",         # Yay! So fun!
+    "That was hilarious 😂"
 ]
 
 # === Continuous Message Sending Function ===
@@ -84,7 +56,6 @@ async def send_continuous_messages(client, name, base_delay, messages, stop_even
             await client.send_message(group, message)
             print(f"[📩] {name} sent: {message}")
 
-            # Faster random delay
             delay = base_delay + random.uniform(0.3, 0.8)
             await asyncio.sleep(delay)
 
@@ -163,4 +134,3 @@ if __name__ == '__main__':
         print("\n[🛑] Bot shutdown requested")
     finally:
         print("[🔴] Service terminated")
-        
