@@ -1,4 +1,4 @@
-from telethon import TelegramClient, events
+from telethon import TelegramClient, events 
 import asyncio
 import random
 
@@ -71,7 +71,6 @@ async def send_continuous_messages(client, name, base_delay, messages, stop_even
 
             delay = base_delay + random.uniform(0.3, 0.8)
             await asyncio.sleep(delay)
-
         except Exception as e:
             print(f"[⚠️] {name} error: {e}")
             await asyncio.sleep(5)
@@ -96,7 +95,7 @@ async def start_handler(event):
     asyncio.create_task(send_continuous_messages(client_2, "User2", 1.1, user2_messages, stop_event))
     asyncio.create_task(send_continuous_messages(client_3, "User3", 1.2, user3_messages, stop_event))
 
-    await event.respond("🚀 Spamming STARTED!\n\n▶️ Messages will send continuously\n⏹ Use /stop to end")
+    await event.respond("🚀 Spamming STARTED!\n\n▶️ Messages will send continuously\n⏹ Use /stop or S to end")
 
 async def stop_handler(event):
     global spam_active
@@ -116,11 +115,12 @@ async def stop_handler(event):
 
 # === Register Commands for All Clients ===
 for client in [client_1, client_2, client_3]:
+
     @client.on(events.NewMessage(pattern='/start'))
     async def handle_start(event):
         await start_handler(event)
 
-    @client.on(events.NewMessage(pattern='/stop'))
+    @client.on(events.NewMessage(pattern='(?i)^/stop$|^s$'))
     async def handle_stop(event):
         await stop_handler(event)
 
@@ -133,7 +133,7 @@ async def main():
     print("\n" + "=" * 50)
     print("🤖 MULTI-USER SPAM BOT RUNNING")
     print(f"📍 Monitoring group: {group_link}")
-    print("🛠️  Commands available: /start | /stop")
+    print("🛠️  Commands available: /start | /stop or S")
     print("=" * 50 + "\n")
 
     await asyncio.gather(
