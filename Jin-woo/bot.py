@@ -1,4 +1,4 @@
-from telethon import TelegramClient, events 
+from telethon import TelegramClient, events
 import asyncio
 import random
 
@@ -54,8 +54,8 @@ user3_messages = [
     "Ready for action", "Haha love that 😄", "Stay awesome 🤙"
 ]
 
-# === Message Sending Loop ===
-async def send_continuous_messages(client, name, base_delay, messages, stop_event):
+# === Send 2–3 Messages Function ===
+async def send_limited_messages(client, name, messages, stop_event):
     try:
         group = await client.get_entity(group_link)
         print(f"[✅] {name} connected to group")
@@ -63,19 +63,21 @@ async def send_continuous_messages(client, name, base_delay, messages, stop_even
         print(f"[❌] {name} group connection failed: {e}")
         return
 
-    while not stop_event.is_set():
+    message_count = random.randint(2, 3)
+
+    for _ in range(message_count):
+        if stop_event.is_set():
+            break
         try:
             message = random.choice(messages)
             await client.send_message(group, message)
             print(f"[📩] {name} sent: {message}")
-
-            delay = base_delay + random.uniform(0.3, 0.8)
-            await asyncio.sleep(delay)
+            await asyncio.sleep(random.uniform(0.7, 1.3))
         except Exception as e:
             print(f"[⚠️] {name} error: {e}")
-            await asyncio.sleep(5)
+            await asyncio.sleep(2)
 
-# === Command Handlers ===
+# === Start Handler ===
 async def start_handler(event):
     global spam_active
     sender = await event.get_sender()
@@ -85,18 +87,24 @@ async def start_handler(event):
         return
 
     if spam_active:
-        await event.respond("⚠️ Already spamming!")
+        await event.respond("⚠️ Already sending messages!")
         return
 
     spam_active = True
     stop_event.clear()
 
-    asyncio.create_task(send_continuous_messages(client_1, "User1", 1.0, user1_messages, stop_event))
-    asyncio.create_task(send_continuous_messages(client_2, "User2", 1.1, user2_messages, stop_event))
-    asyncio.create_task(send_continuous_messages(client_3, "User3", 1.2, user3_messages, stop_event))
+    await event.respond("🚀 Sending 2–3 messages per user...")
 
-    await event.respond("🚀 Spamming STARTED!\n\n▶️ Messages will send continuously\n⏹ Use /stop or S to end")
+    await asyncio.gather(
+        send_limited_messages(client_1, "User1", user1_messages, stop_event),
+        send_limited_messages(client_2, "User2", user2_messages, stop_event),
+        send_limited_messages(client_3, "User3", user3_messages, stop_event)
+    )
 
+    spam_active = False
+    await event.respond("✅ All messages sent.")
+
+# === Stop Handler ===
 async def stop_handler(event):
     global spam_active
     sender = await event.get_sender()
@@ -106,7 +114,7 @@ async def stop_handler(event):
         return
 
     if not spam_active:
-        await event.respond("⚠️ Not currently active!")
+        await event.respond("⚠️ Not currently sending!")
         return
 
     spam_active = False
@@ -116,7 +124,7 @@ async def stop_handler(event):
 # === Register Commands for All Clients ===
 for client in [client_1, client_2, client_3]:
 
-    @client.on(events.NewMessage(pattern='/start'))
+    @client.on(events.NewMessage(pattern='(?i)^(/start|a)$'))
     async def handle_start(event):
         await start_handler(event)
 
@@ -131,9 +139,9 @@ async def main():
     await client_3.start()
 
     print("\n" + "=" * 50)
-    print("🤖 MULTI-USER SPAM BOT RUNNING")
+    print("🤖 MULTI-USER SPAM BOT READY")
     print(f"📍 Monitoring group: {group_link}")
-    print("🛠️  Commands available: /start | /stop or S")
+    print("🛠️  Commands: /start | A | /stop | S")
     print("=" * 50 + "\n")
 
     await asyncio.gather(
@@ -150,3 +158,4 @@ if __name__ == '__main__':
         print("\n[🛑] Bot shutdown requested")
     finally:
         print("[🔴] Service terminated")
+       
