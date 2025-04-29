@@ -15,7 +15,7 @@ api_id_3 = 24906423
 api_hash_3 = '9823ed5cf0dac9192b183bf61eef4e0d'
 
 # === GROUP LINK ===
-group_link = 'https://t.me/+cLJJruEac8E4Mjhl'
+group_link = 'https://t.me/+mtKgVsrcJg05ZmY1'
 
 # === ALLOWED USER IDs ===
 allowed_user_ids = [1745055042, 7280186793]
