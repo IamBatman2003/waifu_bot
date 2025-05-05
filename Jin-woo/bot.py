@@ -29,7 +29,7 @@ client_3 = TelegramClient('user3_session', api_id_3, api_hash_3)
 spam_active = False
 stop_event = asyncio.Event()
 
-# === USER 1 MESSAGES ===
+# === USER MESSAGES ===
 user1_messages = [
     "Hey, how’s it going?", "Just finished lunch 🍱", "Nice weather today!",
     "Haha that cracked me up 😂", "What’s everyone up to?", "Chillin' hard 😎",
@@ -37,7 +37,6 @@ user1_messages = [
     "That was epic 💥"
 ]
 
-# === USER 2 MESSAGES ===
 user2_messages = [
     "Yo! Let’s get things moving 🚀", "Back at it again 🔁", "Coffee time ☕",
     "Did you guys see that? 😳", "Can't stop laughing 😂", "Grinding nonstop 💪",
@@ -45,7 +44,6 @@ user2_messages = [
     "Hold up, what?! 🤯"
 ]
 
-# === USER 3 MESSAGES ===
 user3_messages = [
     "Hey fam 👋", "What’s the mission today?", "Time to roll 🎲",
     "Good morning/afternoon/night everyone!", "On my way 🏃‍♂️", "Game on 🎮",
@@ -53,8 +51,8 @@ user3_messages = [
     "Checking in 📍"
 ]
 
-# === Send 2–3 Messages Function (Faster Delay) ===
-async def send_limited_messages(client, name, messages, stop_event):
+# === Continuous Message Sending Function ===
+async def send_messages_forever(client, name, messages, stop_event):
     try:
         group = await client.get_entity(group_link)
         print(f"[✅] {name} connected to group")
@@ -62,20 +60,15 @@ async def send_limited_messages(client, name, messages, stop_event):
         print(f"[❌] {name} group connection failed: {e}")
         return
 
-    message_count = random.randint(2, 3)
-    print(f"[📊] {name} will send {message_count} messages.")
-
-    for _ in range(message_count):
-        if stop_event.is_set():
-            break
+    while not stop_event.is_set():
         try:
             message = random.choice(messages)
             await client.send_message(group, message)
             print(f"[📩] {name} sent: {message}")
-            await asyncio.sleep(random.uniform(0.4, 0.9))  # Slightly faster
+            await asyncio.sleep(random.uniform(0.7, 1.5))
         except Exception as e:
             print(f"[⚠️] {name} error: {e}")
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
 # === Start Handler ===
 async def start_handler(event):
@@ -93,16 +86,16 @@ async def start_handler(event):
     spam_active = True
     stop_event.clear()
 
-    await event.respond("🚀 Sending 2–3 messages per user...")
+    await event.respond("🚀 Spamming started (unlimited messages)...")
 
     await asyncio.gather(
-        send_limited_messages(client_1, "User1", user1_messages, stop_event),
-        send_limited_messages(client_2, "User2", user2_messages, stop_event),
-        send_limited_messages(client_3, "User3", user3_messages, stop_event)
+        send_messages_forever(client_1, "User1", user1_messages, stop_event),
+        send_messages_forever(client_2, "User2", user2_messages, stop_event),
+        send_messages_forever(client_3, "User3", user3_messages, stop_event)
     )
 
     spam_active = False
-    await event.respond("✅ All messages sent.")
+    await event.respond("✅ Spamming stopped.")
 
 # === Stop Handler ===
 async def stop_handler(event):
@@ -122,7 +115,7 @@ async def stop_handler(event):
     await event.respond("🛑 Spamming STOPPED!")
 
 # === Register Commands for All Clients ===
-for client in [client_1, client_2, client_3]:
+def register_handlers(client):
     @client.on(events.NewMessage(pattern='(?i)^(/start|a)$'))
     async def handle_start(event):
         await start_handler(event)
@@ -130,6 +123,9 @@ for client in [client_1, client_2, client_3]:
     @client.on(events.NewMessage(pattern='(?i)^(/stop|s)$'))
     async def handle_stop(event):
         await stop_handler(event)
+
+for client in [client_1, client_2, client_3]:
+    register_handlers(client)
 
 # === Main Execution ===
 async def main():
@@ -157,4 +153,3 @@ if __name__ == '__main__':
         print("\n[🛑] Bot shutdown requested")
     finally:
         print("[🔴] Service terminated")
-        
