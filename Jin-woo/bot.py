@@ -30,16 +30,16 @@ spam_active = False
 stop_event = asyncio.Event()
 
 # === USER 1 MESSAGES ===
-user1_messages = [
-    *["/XXXXXXXXXXXXXXXXXXXXX"] * 10,
+user1_commands = ["/XXXXXXXXXXXXXXXXXXXXX"]
+user1_phrases = [
     "Hey! How’s everything going?", "Good vibes only 🌈", "Anyone here today?",
     "I'm just chilling 🍃", "Hope your day’s going great!", "Peace and love fam! ✌️",
     "Wassup crew?", "Haha that was funny 😂", "Where’s everyone at?", "Stay blessed ✨"
 ]
 
 # === USER 2 MESSAGES ===
-user2_messages = [
-    *["/XXXXXXXXXXXXXXXXXXXXX"] * 10,
+user2_commands = ["/XXXXXXXXXXXXXXXXXXXXX"]
+user2_phrases = [
     "Yo! Ready to roll?", "Let’s get it started 🎯", "I’m back in action!",
     "Boom! Just like that 💥", "What’s up pirates? 🏴‍☠️", "Target locked!",
     "Anyone up for a duel? ⚔️", "Who's still awake? 🕒", "Always grinding 💪", "Let's gooo!",
@@ -47,15 +47,15 @@ user2_messages = [
 ]
 
 # === USER 3 MESSAGES ===
-user3_messages = [
-    *["/XXXXXXXXXXXXXXXXXXXXX"] * 10,
+user3_commands = ["/XXXXXXXXXXXXXXXXXXXXX"]
+user3_phrases = [
     "Hello team 👋", "Just checking in 🧐", "Let’s keep the vibes alive 💫",
     "Good morning crew ☀️", "All systems go 🚀", "We’re live 🔴",
     "Ready for action", "Haha love that 😄", "Stay awesome 🤙"
 ]
 
 # === Send Messages Function ===
-async def send_limited_messages(client, name, messages, stop_event, message_count=None):
+async def send_limited_messages(client, name, commands, phrases, stop_event, message_count=None):
     try:
         group = await client.get_entity(group_link)
         print(f"[✅] {name} connected to group")
@@ -70,7 +70,9 @@ async def send_limited_messages(client, name, messages, stop_event, message_coun
         if stop_event.is_set():
             break
         try:
-            message = random.choice(messages)
+            # Choose between command or phrase
+            message_type = random.choice(['command', 'phrase'])
+            message = random.choice(commands) if message_type == 'command' else random.choice(phrases)
             await client.send_message(group, message)
             print(f"[📩] {name} sent: {message}")
             await asyncio.sleep(random.uniform(0.7, 1.3))
@@ -93,13 +95,12 @@ async def start_handler(event):
 
     spam_active = True
     stop_event.clear()
-
     await event.respond("🚀 Sending 2–3 messages per user...")
 
     await asyncio.gather(
-        send_limited_messages(client_1, "User1", user1_messages, stop_event, message_count=2),
-        send_limited_messages(client_2, "User2", user2_messages, stop_event, message_count=3),
-        send_limited_messages(client_3, "User3", user3_messages, stop_event)  # random
+        send_limited_messages(client_1, "User1", user1_commands, user1_phrases, stop_event),
+        send_limited_messages(client_2, "User2", user2_commands, user2_phrases, stop_event),
+        send_limited_messages(client_3, "User3", user3_commands, user3_phrases, stop_event)
     )
 
     spam_active = False
@@ -122,9 +123,8 @@ async def stop_handler(event):
     stop_event.set()
     await event.respond("🛑 Spamming STOPPED!")
 
-# === Register Commands for All Clients ===
+# === Register Commands ===
 for client in [client_1, client_2, client_3]:
-
     @client.on(events.NewMessage(pattern='(?i)^(/start|a)$'))
     async def handle_start(event):
         await start_handler(event)
